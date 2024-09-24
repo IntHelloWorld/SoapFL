@@ -1,0 +1,89 @@
+{
+    "SearchSuspiciousClass": {
+        "assistant_role_name": "Software Architect",
+        "user_role_name": "Software Architect",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "According to the test code, error stack trace and test output of each failed test, and the name and documentation of the classes that covered by all of the failed tests listed below: ",
+            "{test_infos}",
+            "Covered Classes List: ",
+            "{covered_classes}",
+            "As the {assistant_role}, you will analyze all the given information to recommend what covered classes are most likely to be problematic. Please make sure that you must ONLY select classes from the Covered Classes List, the fewer classes you choose, the better, no more than {num_selected_classes} at most.",
+            "You should NOT select any classes in the Failed tests, since the root causes only exist in the production code.",
+            "You should emphasize the full name of the recommended classes in your response with pound sign, e.g., \"... the class #com.google.ClassName# is suspicious, ...\"."
+        ]
+    },
+    "MethodDocEnhancement": {
+        "assistant_role_name": "Source Code Reviewer",
+        "user_role_name": "Source Code Reviewer",
+        "phase_prompt": [
+            "Class {class_name} was covered during testing, the documentation of the class is \"{class_documentation}\".",
+            "According to the covered methods in the class:",
+            "Covered Methods List:",
+            "{methods}",
+            "As the {assistant_role}, you will analyze the method call relationship to generate a comment for each covered method.",
+            "For each covered method, if this method calls other methods in the Covered Methods List, you must explicitly claim the covered methods that called by this method in the comment, e.g., \"... this method calls method \"process\" to do something ...\".",
+            "You should response with a table in markdown format, for example:",
+            "| Method Full Name | Method Comment |\n| --- | --- |\n| com.google.ClassName$InnerClassName::MethodName(Args) | The method comment |"
+        ]
+    },
+    "FindRelatedMethods": {
+        "assistant_role_name": "Software Architect",
+        "user_role_name": "Software Architect",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "The existing analysis result shows that the class {class_name} may be problematic, the documentation of the class is \"{class_documentation}\".",
+            "According to the test code, error stack trace and test output of each failed test, and methods in the class listed below: ",
+            "{test_infos}",
+            "Methods List:",
+            "{methods_list}",
+            "As the {assistant_role}, you will examine the Methods List to select out all methods that may be responsible for the test failures. Note that you must ONLY select methods from the Methods List.",
+            "To answer, use the format: \"INDEX METHOD_FULL_NAME: DESCRIPTION\" where \"INDEX\" is the index of the method, \"METHOD_FULL_NAME\" is the full name of the method in Method List, \"DESCRIPTION\" denotes the detailed description. For example:",
+            "'''",
+            "1) com.google.JavaClass1::method1()：this method is suspicious ...",
+            "2) com.google.JavaClass2$InnerClass1::method2()：this method is suspicious ...",
+            "'''"
+        ]
+    },
+    "MethodReview": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug:",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "The existing analysis result shows that the method {method_name} may be problematic.",
+            "According to the test code, error stack trace and test output of each failed test , and the information of the suspicious method listed below: ",
+            "{test_infos}",
+            "Class of the Suspicious Method: \"{class_name}\"",
+            "Documentation of the Class: \"{class_doc}\"",
+            "Suspicious Method Full Name: \"{method_name}\"",
+            "Suspicious Method Comment: \"{method_doc}\"",
+            "Suspicious Method Code:",
+            "\"{method_code}\"",
+            "As the {assistant_role}, to fix all of the test failures, you will carefully examine the code of the method \"{method_name}\" line by line to determine if this method is the best location to be fixed.",
+            "You should reply with following rules:",
+            "1. If this method is the best location to be fixed, answer with a single word <TRUE>, followed by the reason, e.g., \"<TRUE> This method is the best location that need to be fixed, because ...\";",
+            "2. Otherwise, if this method is not the best location to be fixed or you cannot determine, answer with a single word <FALSE>, e.g., \"<FALSE> This method is not the best location that need to be fixed ...\"."
+        ]
+    },
+    "GetTop1Method": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more test suites failed due to a single bug:",
+            "{failed_test_suites}",
+            "According to the information of the suspicious methods listed below: ",
+            "Suspicious Methods:",
+            "'''",
+            "{methods_prompt}",
+            "'''",
+            "As the {assistant_role}, you will determine which SINGLE Suspicious Method is most likely the root cause of ALL failed test suites.",
+            "You should only select ONE method from the Suspicious Methods, and you should emphasize the full name of the selected method in your response with pound sign, e.g., \"... the method #com.google.JavaClass$InnerClass::method()# is suspicious, ...\""
+        ]
+    }
+}

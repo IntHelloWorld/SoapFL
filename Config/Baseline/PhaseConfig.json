@@ -1,0 +1,41 @@
+{
+    "SearchSuspiciousClass": {
+        "assistant_role_name": "Software Architect",
+        "user_role_name": "Software Architect",
+        "phase_prompt": [
+            "None"
+        ]
+    },
+    "MethodReview": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug:",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "According to the test code, error stack trace and test output of each failed test listed below: ",
+            "{test_infos}",
+            "Now, given the method {method_name} which has been executed during the test:",
+            "Method Full Name: \"{method_name}\"\n\nMethod Comment: \"{method_doc}\"\n\nMethod Code:\n\"{method_code}\"",
+            "As the {assistant_role}, to fix all of the test failures, you will carefully examine the code of the method \"{method_name}\" line by line to determine if this method is the best location to be fixed.",
+            "You should reply with following rules:",
+            "1. If this method is the best location to be fixed, answer with a single word <TRUE>, followed by the reason, e.g., \"<TRUE> This method is the best location that need to be fixed, because ...\";",
+            "2. Otherwise, if this method is not the best location to be fixed or you cannot determine, answer with a single word <FALSE>, e.g., \"<FALSE> This method is not the best location that need to be fixed ...\"."
+        ]
+    },
+    "GetTop1Method": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more test suites failed due to a single bug:",
+            "{failed_test_suites}",
+            "According to the information of the suspicious methods listed below: ",
+            "Suspicious Methods:",
+            "'''",
+            "{methods_prompt}",
+            "'''",
+            "As the {assistant_role}, you will determine which SINGLE Suspicious Method is most likely the root cause of ALL failed test suites.",
+            "You should only select ONE method from the Suspicious Methods, and you should emphasize the full name of the selected method in your response with pound sign, e.g., \"... the method #com.google.JavaClass$InnerClass::method()# is suspicious, ...\""
+        ]
+    }
+}

@@ -1,0 +1,58 @@
+{
+    "chain": [
+        {
+            "phase": "TestFailureAnalysis",
+            "phaseType": "SimplePhase",
+            "max_turn_step": 1,
+            "need_reflect": "False"
+        },
+        {
+            "phase": "SearchSuspiciousClass",
+            "phaseType": "SimplePhase",
+            "max_turn_step": 1,
+            "need_reflect": "False"
+        },
+        {
+            "phase": "MethodDocEnhancement",
+            "phaseType": "SimplePhase",
+            "max_turn_step": 1,
+            "need_reflect": "False"
+        },
+        {
+            "phase": "FindRelatedMethods",
+            "phaseType": "SimplePhase",
+            "max_turn_step": 1,
+            "need_reflect": "False"
+        },
+        {
+            "phase": "MethodReview",
+            "phaseType": "SimplePhase",
+            "max_turn_step": 1,
+            "need_reflect": "False"
+        }
+    ],
+    "get_top1_phase": {
+        "phase": "GetTop1Method",
+        "phaseType": "SimplePhase",
+        "max_turn_step": 1,
+        "need_reflect": "False"
+    },
+    "recruitments": [
+        "Test Code Reviewer",
+        "Source Code Reviewer",
+        "Software Test Engineer",
+        "Software Architect"
+    ],
+    "num_test_cases":5,
+    "num_classes": 50,
+    "test_output_tokens": 200,
+    "class_doc_tokens": 100,
+    "method_doc_tokens": 100,
+    "num_selected_classes": 1,
+    "basement": "None",
+    "clear_structure": "True",
+    "brainstorming": "False",
+    "gui_design": "True",
+    "git_management": "False",
+    "self_improve": "False"
+}

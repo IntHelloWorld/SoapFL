@@ -1,0 +1,9 @@
+*.pyc
+.DS_Store
+.idea
+.vscode
+*.zip
+DebugResult*
+functions/OchiaiResult
+functions/tmp
+LLMAO
