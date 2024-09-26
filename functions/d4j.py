@@ -15,7 +15,6 @@ from chatdev.test_suite import (
     TestSuite,
     TestUtilityMethod,
 )
-from functions.instrument import run_instrument
 from functions.line_parser import (
     JavaClass,
     JavaMethod,
@@ -39,17 +38,24 @@ root = os.path.dirname(filepath)
 directory = os.path.join(root, "DebugResult")
 agent_jar = os.path.join(root, "functions/classtracer/target/classtracer-1.0.jar")
 
+D4J_EXEC = "/root/APR/GrowingBugRepository-6.1/framework/bin/defects4j"
 
-def check_out(version, project, bugID, project_path=None):
+def check_out(version, project, bugID, subproj, project_path=None):
     cwd = os.getcwd()
     if project_path is None:
         project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
     os.makedirs(project_path, exist_ok=True)
     os.chdir(project_path)
     if not os.path.exists("buggy"):
-        run_cmd(f"defects4j checkout -p {project} -v {bugID}b -w buggy")
+        if subproj:
+            run_cmd(f"{D4J_EXEC} checkout -p {project} -v {bugID}b -w buggy -s {subproj}")
+        else:
+            run_cmd(f"{D4J_EXEC} checkout -p {project} -v {bugID}b -w buggy")
     if not os.path.exists("fixed"):
-        run_cmd(f"defects4j checkout -p {project} -v {bugID}f -w fixed")
+        if subproj:
+            run_cmd(f"{D4J_EXEC} checkout -p {project} -v {bugID}f -w fixed -s {subproj}")
+        else:
+            run_cmd(f"{D4J_EXEC} checkout -p {project} -v {bugID}f -w fixed")
     os.chdir(cwd)
 
 
@@ -63,8 +69,8 @@ def run_single_test(test_name, buggy_path, test_tmp_dir):
         with open(stack_trace_file, "r") as f:
             stack_trace = f.readlines()
         return test_output, stack_trace
-    run_cmd(f"defects4j compile -w {buggy_path}")
-    cmd = f"timeout 90 defects4j test -n -t {test_name} -w {buggy_path}"
+    run_cmd(f"{D4J_EXEC} compile -w {buggy_path}")
+    cmd = f"timeout 90 {D4J_EXEC} test -n -t {test_name} -w {buggy_path}"
     run_cmd(cmd)
     with open(f"{buggy_path}/failing_tests", "r") as f:
         test_res = f.readlines()
@@ -195,6 +201,47 @@ def get_test_code(buggy_path, src_path, runed_methods, stack_trace):
     return test_method, test_utility_methods
 
 
+def run_instrument(test_name, buggy_dir, tmp_dir, agent_jar, mode="src"):
+    
+    log = ""
+    
+    if mode == "src":
+        property = "dir.bin.classes"
+    elif mode == "test":
+        property = "dir.bin.tests"
+    else:
+        raise RuntimeError(
+            f"Unknown mode: {mode}, should be one of ['src', 'test']")
+    
+    inst_log = os.path.join(tmp_dir, f"inst_{mode}.log")
+    run_log = os.path.join(tmp_dir, f"run_{mode}.log")
+    if os.path.exists(inst_log) and os.path.exists(run_log):
+        print("instrumentation already done")
+        return log
+
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    try:
+        cmd1 = f"{D4J_EXEC} export -p {property} -w {buggy_dir}"
+        out, err = run_cmd(cmd1)
+        log = log + out + err
+        classes_dir = os.path.join(buggy_dir, out)
+    except Exception as e:
+        raise RuntimeError(f"Failed to export \"{property}\" for {buggy_dir}, {e}")
+
+    run_cmd(f"{D4J_EXEC} compile -w {buggy_dir}")
+    cmd2 = f"{D4J_EXEC} test -n -w {buggy_dir} -t {test_name} -a -Djvmargs=-javaagent:{agent_jar}=outputDir={tmp_dir},classesPath={classes_dir}"
+    out, err = run_cmd(cmd2)
+    log = log + out + err
+    
+    if os.path.exists(os.path.join(tmp_dir, "run.log")):
+        os.rename(os.path.join(tmp_dir, "run.log"), run_log)
+    if os.path.exists(os.path.join(tmp_dir, "inst.log")):
+        os.rename(os.path.join(tmp_dir, "inst.log"), inst_log)
+    
+    return log
+
+
 def refine_failed_tests(version, project, bugID):
     import pickle
     project_path = os.path.join("/home/qyh/projects/LLM-Location/AgentFL/DebugResult_d4j140_GPT35", f"d4j{version}-{project}-{bugID}")
@@ -206,10 +253,10 @@ def refine_failed_tests(version, project, bugID):
     check_out(version, project, bugID, check_out_path)
     buggy_path = os.path.join(check_out_path, "buggy")
     
-    cmd = f"defects4j export -p dir.src.classes -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p dir.src.classes -w {buggy_path}"
     src_path, err = run_cmd(cmd)
     
-    cmd = f"defects4j export -p classes.modified -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p classes.modified -w {buggy_path}"
     out, err = run_cmd(cmd)
     modified_classes = out.split("\n")
     
@@ -222,28 +269,29 @@ def refine_failed_tests(version, project, bugID):
     run_cmd(f"rm -rf {check_out_path}")
 
 
-def get_failed_tests(version, project, bugID) -> TestFailure:
+def get_failed_tests(version, project, bugID, subproj) -> TestFailure:
     """Get the TestFailure object for a defect4j bug.
     """
 
     project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
-    buggy_path = os.path.join(project_path, "buggy")
-    os.makedirs(buggy_path, exist_ok=True)
+    if subproj:
+        buggy_path = os.path.join(project_path, "buggy")
+    else:
+        buggy_path = os.path.join(project_path, "buggy", subproj)
     tmp_path = os.path.join(project_path, "tmp")
-    os.makedirs(tmp_path, exist_ok=True)
 
     # get properties
-    cmd = f"defects4j export -p tests.trigger -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p tests.trigger -w {buggy_path}"
     out, err = run_cmd(cmd)
     test_names = out.split("\n")
 
-    cmd = f"defects4j export -p dir.src.classes -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p dir.src.classes -w {buggy_path}"
     src_path, err = run_cmd(cmd)
 
-    cmd = f"defects4j export -p dir.src.tests -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p dir.src.tests -w {buggy_path}"
     test_path, err = run_cmd(cmd)
 
-    cmd = f"defects4j export -p classes.modified -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p classes.modified -w {buggy_path}"
     out, err = run_cmd(cmd)
     modified_classes = out.split("\n")
 
@@ -268,14 +316,27 @@ def get_failed_tests(version, project, bugID) -> TestFailure:
             test_tmp_dir = os.path.join(tmp_path, test_suite.name, test_name)
             os.makedirs(test_tmp_dir, exist_ok=True)
 
-            # run the test
-            test_output, stack_trace = run_single_test(test_name, buggy_path, test_tmp_dir)
-            test_case.test_output = test_output
-            test_case.stack_trace = stack_trace
-
-            # run instrumentation
+            # run test with instrumentation
             run_instrument(test_name, buggy_path, test_tmp_dir, agent_jar, mode="test")
 
+            test_output_file = os.path.join(test_tmp_dir, "test_output.txt")
+            stack_trace_file = os.path.join(test_tmp_dir, "stack_trace.txt")
+            if os.path.exists(test_output_file) and os.path.exists(stack_trace_file):
+                print("test already run")
+                with open(test_output_file, "r") as f:
+                    test_output = f.readlines()
+                with open(stack_trace_file, "r") as f:
+                    stack_trace = f.readlines()
+            else:
+                with open(f"{buggy_path}/failing_tests", "r") as f:
+                    test_res = f.readlines()
+                test_output, stack_trace = parse_test_report(test_res)
+                with open(test_output_file, "w") as f:
+                    f.writelines(test_output)
+                with open(stack_trace_file, "w") as f:
+                    f.writelines(stack_trace)
+            git_clean(buggy_path)
+            
             # find all related test code
             run_log_file = os.path.join(test_tmp_dir, "run_test.log")
             with open(run_log_file, "r") as f:
@@ -486,7 +547,7 @@ def extract_classes(
     buggy_path = os.path.join(project_path, "buggy")
     tmp_path = os.path.join(project_path, "tmp")
 
-    cmd = f"defects4j export -p dir.src.classes -w {buggy_path}"
+    cmd = f"{D4J_EXEC} export -p dir.src.classes -w {buggy_path}"
     src_path, err = run_cmd(cmd)
 
     loaded_classes = []

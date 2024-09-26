@@ -69,8 +69,10 @@ def main():
                         help="Name of project, your debug result will be generated in DebugResult/d4jversion_project_bugID")
     parser.add_argument('--bugID', type=int, default=1,
                         help="Prompt of software")
-    parser.add_argument('--model', type=str, default="GPT_3_5_TURBO",
-                        help="GPT Model, choose from {'GPT_3_5_TURBO','GPT_4','GPT_4_32K'}")
+    parser.add_argument('--subproj', type=str, required=False, default="",
+                        help="The subproject of the project")
+    parser.add_argument('--model', type=str, default="DeepSeek",
+                        help="GPT Model, choose from {'GPT_3_5_TURBO','GPT_4','GPT_4_32K', 'DeepSeek'}")
     args = parser.parse_args()
 
     # Start DebugDev
@@ -87,7 +89,7 @@ def main():
         print(f"d4j{args.version}-{args.project}-{args.bugID} already finished, skip!")
         return
     
-    check_out(args.version, args.project, args.bugID)
+    check_out(args.version, args.project, args.bugID, args.subproj)
     print(f"Checkout successfully!")
     
     pkl_file = os.path.join(project_path, "test_failure.pkl")
@@ -96,7 +98,7 @@ def main():
             failed_tests = pickle.load(f)
             print(f"Load failed tests from {pkl_file}")
     else:
-        failed_tests = get_failed_tests(args.version, args.project, args.bugID)
+        failed_tests = get_failed_tests(args.version, args.project, args.bugID, args.subproj)
         with open(pkl_file, "wb") as f:
             pickle.dump(failed_tests, f)
         print(f"Save failed tests to {pkl_file}")
@@ -106,7 +108,12 @@ def main():
     # ----------------------------------------
     
     config_path, config_phase_path, config_role_path = get_config(args.config)
-    args2type = {'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO, 'GPT_4': ModelType.GPT_4, 'GPT_4_32K': ModelType.GPT_4_32k}
+    args2type = {
+        'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO,
+        'GPT_4': ModelType.GPT_4,
+        'GPT_4_32K': ModelType.GPT_4_32k,
+        'DeepSeek': ModelType.DEEPSEEK
+        }
     chat_chain = ChatChain(config_path=config_path,
                            config_phase_path=config_phase_path,
                            config_role_path=config_role_path,
@@ -180,7 +187,4 @@ def main():
     print("*" * 100)
 
 if __name__ == "__main__":
-    # os.environ["OPENAI_API_KEY"] = "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"
-    # os.environ["http_proxy"] = "http://127.0.0.1:7890"
-    # os.environ["https_proxy"] = "http://127.0.0.1:7890"
     main()

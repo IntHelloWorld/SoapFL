@@ -17,6 +17,7 @@ from typing import Any, Dict
 
 import openai
 import tiktoken
+from openai.types.chat import ChatCompletion
 
 from camel.typing import ModelType
 from chatdev.utils import log_online
@@ -48,40 +49,23 @@ class OpenAIModel(ModelBackend):
         self.model_type = model_type
         self.model_config_dict = model_config_dict
 
-    def run(self, *args, **kwargs) -> Dict[str, Any]:
+    def run(self, *args, **kwargs):
         string = "\n".join([message["content"] for message in kwargs["messages"]])
-        encoding = tiktoken.encoding_for_model(self.model_type.value)
+        encoding = tiktoken.encoding_for_model('gpt-4')
         num_prompt_tokens = len(encoding.encode(string))
         gap_between_send_receive = 15 * len(kwargs["messages"])
         num_prompt_tokens += gap_between_send_receive
 
-        num_max_token_map = {
-            "gpt-3.5-turbo": 4096,
-            "gpt-3.5-turbo-16k": 16384,
-            "gpt-3.5-turbo-0613": 4096,
-            "gpt-3.5-turbo-16k-0613": 16384,
-            "gpt-4": 8192,
-            "gpt-4-0613": 8192,
-            "gpt-4-32k": 32768,
-        }
-        num_max_token = num_max_token_map[self.model_type.value]
-        num_max_completion_tokens = num_max_token - num_prompt_tokens
-        self.model_config_dict['max_tokens'] = num_max_completion_tokens
-        
-        openai.api_base = "https://api.zhiyungpt.com/v1"
-        # openai.api_key = "sk-78Uv6RwdW3reQ7fc5a7fFb1bCc8a4d7f9b9f3a9eD9457784"
-        openai.api_key = "sk-Sd8LlhnDT8Fph3FtAa63Ce0d20E3431cB63bF6F419E41c94"
-        response = openai.ChatCompletion.create(*args,
-                                                **kwargs,
-                                                model=self.model_type.value,
-                                                **self.model_config_dict)
-        time.sleep(2)
+        client = openai.OpenAI(
+            api_key="sk-666cc3eea6ca4464ad9793b2c77927df",
+            base_url="https://api.deepseek.com/v1",
+        )
+        self.model_config_dict['max_tokens'] = 4096
 
-        log_online(
-            "**[OpenAI_Usage_Info Receive]**\nprompt_tokens: {}\ncompletion_tokens: {}\ntotal_tokens: {}\n".format(
-                response["usage"]["prompt_tokens"], response["usage"]["completion_tokens"],
-                response["usage"]["total_tokens"]))
-        if not isinstance(response, Dict):
+        response = client.chat.completions.create(*args, **kwargs, model=self.model_type.value,
+                                                    **self.model_config_dict)
+        
+        if not isinstance(response, ChatCompletion):
             raise RuntimeError("Unexpected return from OpenAI API")
         return response
 
@@ -117,7 +101,7 @@ class ModelFactory:
         default_model_type = ModelType.GPT_3_5_TURBO
 
         if model_type in {
-            ModelType.GPT_3_5_TURBO, ModelType.GPT_4, ModelType.GPT_4_32k,
+            ModelType.GPT_3_5_TURBO, ModelType.GPT_4, ModelType.GPT_4_32k, ModelType.DEEPSEEK,
             None
         }:
             model_class = OpenAIModel

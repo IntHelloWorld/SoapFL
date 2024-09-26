@@ -182,7 +182,7 @@ def methods_list_prompt(java_class, model_type, method_doc_tokens=100):
 
 
 def check_tokens(model_type, doc, max_tokens):
-    encoding = tiktoken.encoding_for_model(model_type.value)
+    encoding = tiktoken.encoding_for_model('gpt-4')
     original_tokens = encoding.encode(doc)
     num_doc_tokens = len(original_tokens)
     if num_doc_tokens <= max_tokens:

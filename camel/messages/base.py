@@ -14,6 +14,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from openai.types.chat.chat_completion_message import FunctionCall
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
+
 from camel.messages import (
     OpenAIAssistantMessage,
     OpenAIChatMessage,
@@ -44,6 +49,8 @@ class BaseMessage:
     meta_dict: Optional[Dict[str, str]]
     role: str
     content: str
+    function_call: Optional[FunctionCall] = None
+    tool_calls: Optional[ChatCompletionMessageToolCall] = None
 
     def __getattribute__(self, name: str) -> Any:
         r"""Get attribute override to delegate string methods to the

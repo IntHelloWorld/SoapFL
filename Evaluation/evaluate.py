@@ -155,6 +155,6 @@ def main(res_dir, config):
     save_to_csv(result_dict, d4j_version)
 
 if __name__ == "__main__":
-    res_dir = "DebugResult_BaseOnGrace"
-    config = "BaseOnGrace"
+    res_dir = "DebugResult_APRContest"
+    config = "Default"
     main(res_dir, config)

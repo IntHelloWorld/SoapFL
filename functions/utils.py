@@ -4,10 +4,15 @@ import subprocess as sp
 
 
 def run_cmd(cmd: str):
+    print("-" * 50)
+    print(f"run command: {cmd}")
     p = sp.Popen(cmd.split(" "), stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
     output, err = p.communicate()
     out = output.decode("utf-8")
     err = err.decode("utf-8")
+    print(err)
+    print(out)
+    print("-" * 50)
     return out, err
 
 def git_clean(git_dir):
