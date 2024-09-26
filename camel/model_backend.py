@@ -57,7 +57,7 @@ class OpenAIModel(ModelBackend):
         num_prompt_tokens += gap_between_send_receive
 
         client = openai.OpenAI(
-            api_key="sk-666cc3eea6ca4464ad9793b2c77927df",
+            api_key="sk-cb025db172814e68b9c969e80e83e1a7",
             base_url="https://api.deepseek.com/v1",
         )
         self.model_config_dict['max_tokens'] = 4096
