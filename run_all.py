@@ -19,11 +19,11 @@ def run_all_bugs(config_name: str):
         if subproj == "None":
             subproj = ""
         for bug_id in bugIDs:
-            res_path = f"DebugResult/{config_name}/{version}/{proj}/{proj}-{bug_id}"
-            res_path = os.path.join(root, res_path)
+            res_path = os.path.join(root, f"DebugResult/d4j{version}-{proj}-{bug_id}")
+            res_file = os.path.join(res_path, "result.json")
             if bug_id in deprecatedIDs:
                 continue
-            if os.path.exists(res_path):
+            if os.path.exists(res_file):
                 print(f"{version}-{proj}-{bug_id} already finished, skip!")
                 continue
             

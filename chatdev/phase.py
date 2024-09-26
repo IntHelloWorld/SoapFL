@@ -338,6 +338,7 @@ class SearchSuspiciousClass(Phase):
         covered_classes, classes_dict = covered_classes_prompt(chat_env.env_dict['d4j_version'],
                                                                chat_env.env_dict['project_name'],
                                                                chat_env.env_dict['bug_ID'],
+                                                               chat_env.env_dict['subproj'],
                                                                chat_env.test_suite,
                                                                self.model_type,
                                                                n_classes=chat_env.config.num_classes,

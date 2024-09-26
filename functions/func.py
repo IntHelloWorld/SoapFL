@@ -101,7 +101,7 @@ def test_infos_prompt(test_cases, model_type, test_output_tokens=100, comment=Tr
     return prompt
 
 
-def covered_classes_prompt(version, project, bugID, test_suite, model_type, n_classes=50, class_doc_tokens=100, basement="None"):
+def covered_classes_prompt(version, project, bugID, subproj, test_suite, model_type, n_classes=50, class_doc_tokens=100, basement="None"):
     """
     Return prompt includes information of covered classes, including name and doc for each.
     The prompt is in shape of a MarkDown table.
@@ -111,7 +111,7 @@ def covered_classes_prompt(version, project, bugID, test_suite, model_type, n_cl
     class_doc_tokens: the maximum number of tokens for the class doc.
     """
     classes_dict = {}
-    _, _, extracted_classes = extract_classes(version, project, bugID, test_suite, max_num=n_classes)
+    _, _, extracted_classes = extract_classes(version, project, bugID, subproj, test_suite, max_num=n_classes)
     if basement == "Grace":
         extracted_classes = filter_classes_Grace(project, bugID, extracted_classes)
     elif basement == "Ochiai":

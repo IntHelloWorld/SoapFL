@@ -76,6 +76,7 @@ class ChatEnv:
             "d4j_version": "",
             "project_name": "",
             "bug_ID": "",
+            "subproj": "",
             "test_infos": "",
             "failed_tests": "",
             "test_codes": "",

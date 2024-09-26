@@ -120,6 +120,7 @@ def main():
                            d4j_version=args.version,
                            project_name=args.project,
                            bug_ID=args.bugID,
+                           subproj=args.subproj,
                            model_type=args2type[args.model])
     
     # ----------------------------------------

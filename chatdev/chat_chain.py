@@ -29,6 +29,7 @@ class ChatChain:
                  d4j_version: str = None,
                  project_name: str = None,
                  bug_ID: int = None,
+                 subproj: str = None,
                  test_suite: TestSuite = None,
                  test_cases: List[TestCase] = None,
                  model_type: ModelType = ModelType.GPT_3_5_TURBO) -> None:
@@ -52,6 +53,7 @@ class ChatChain:
         self.d4j_version = d4j_version
         self.project_name = project_name
         self.bug_ID = bug_ID
+        self.subproj = subproj
         self.test_suite = test_suite
         self.test_cases = test_cases
         self.model_type = model_type
@@ -234,6 +236,7 @@ class ChatChain:
         self.chat_env.env_dict['d4j_version'] = self.d4j_version
         self.chat_env.env_dict['project_name'] = self.project_name
         self.chat_env.env_dict['bug_ID'] = self.bug_ID
+        self.chat_env.env_dict['subproj'] = self.subproj
         self.chat_env.test_suite = self.test_suite
         self.chat_env.test_cases = self.test_cases
 

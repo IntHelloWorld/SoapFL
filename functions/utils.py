@@ -18,7 +18,7 @@ def run_cmd(cmd: str):
 def git_clean(git_dir):
     cwd = os.getcwd()
     os.chdir(git_dir)
-    run_cmd("git checkout . && git clean -xdf")
+    run_cmd("git checkout . && git clean -df")
     os.chdir(cwd)
 
 def clean_doc(doc: str) -> str:

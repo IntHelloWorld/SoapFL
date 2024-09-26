@@ -275,9 +275,9 @@ def get_failed_tests(version, project, bugID, subproj) -> TestFailure:
 
     project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
     if subproj:
-        buggy_path = os.path.join(project_path, "buggy")
-    else:
         buggy_path = os.path.join(project_path, "buggy", subproj)
+    else:
+        buggy_path = os.path.join(project_path, "buggy")
     tmp_path = os.path.join(project_path, "tmp")
 
     # get properties
@@ -536,7 +536,7 @@ def filter_classes_Grace(project, bugID, extracted_classes: List[JavaClass]) -> 
 
 
 def extract_classes(
-    version, project, bugID, test_suite: TestSuite, max_num=50
+    version, project, bugID, subproj, test_suite: TestSuite, max_num=50
 ) -> Tuple[List[List[JavaClass]], List[List[JavaClass]], List[JavaClass]]:
     """
     Extract loaded java classes for a test suite (witch may contains multiple test methods)
@@ -544,7 +544,10 @@ def extract_classes(
     """
 
     project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
-    buggy_path = os.path.join(project_path, "buggy")
+    if subproj:
+        buggy_path = os.path.join(project_path, "buggy", subproj)
+    else:
+        buggy_path = os.path.join(project_path, "buggy")
     tmp_path = os.path.join(project_path, "tmp")
 
     cmd = f"{D4J_EXEC} export -p dir.src.classes -w {buggy_path}"
