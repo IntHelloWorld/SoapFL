@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from run_all import D4J_ALL
+from projects import ALL_BUGS
 
 N_PHASES = {"Default": 6,
             "BaseOnGrace": 2,
@@ -101,11 +101,12 @@ def save_to_csv(result_dict, d4j_version):
     f = open(csv_file, "w")
     items = ["project", "bug_id", "true_method", "method_rank", "recall_ratio", "false_positive", "cost", "total_tokens", "time"]
     f.write(",".join(items) + "\n")
-    for project in D4J_ALL[d4j_version]:
-        for bug_id in tqdm(range(D4J_ALL[d4j_version][project]["begin"],
-                                 D4J_ALL[d4j_version][project]["end"] + 1),
-                           desc=f"Saving {project}"):
-            if bug_id in D4J_ALL[d4j_version][project]["deprecate"]:
+    version = "GrowingBugs"
+    for project in ALL_BUGS:
+        bugIDs = ALL_BUGS[project][0]
+        deprecatedIDs = ALL_BUGS[project][1]
+        for bug_id in bugIDs:
+            if bug_id in deprecatedIDs:
                 continue
             if str(bug_id) not in result_dict[project]:
                 print(f"Warning: Result of {project}-{bug_id} not exists!")
@@ -155,6 +156,6 @@ def main(res_dir, config):
     save_to_csv(result_dict, d4j_version)
 
 if __name__ == "__main__":
-    res_dir = "DebugResult_APRContest"
+    res_dir = "DebugResult"
     config = "Default"
     main(res_dir, config)
