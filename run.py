@@ -20,6 +20,7 @@ import sys
 
 from camel.typing import ModelType
 from functions.d4j import check_out, get_failed_tests
+from functions.generate_dataset import make_fix_dataset
 
 root = os.path.dirname(__file__)
 sys.path.append(root)
@@ -85,7 +86,8 @@ def main():
     
     project_path = os.path.join(root, "DebugResult", f"d4j{args.version}-{args.project}-{args.bugID}")
     res_file = os.path.join(project_path, "result.json")
-    if os.path.exists(res_file):
+    dataset_file = os.path.join(project_path, "dataset_for_fix.json")
+    if os.path.exists(dataset_file):
         print(f"d4j{args.version}-{args.project}-{args.bugID} already finished, skip!")
         return
     
@@ -178,6 +180,8 @@ def main():
     # ----------------------------------------
 
     chat_chain.execute_get_top1_phase()
+    
+    make_fix_dataset(chat_chain, failed_tests)
     
     # ----------------------------------------
     #          Post Processing

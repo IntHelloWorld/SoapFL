@@ -38,7 +38,7 @@ root = os.path.dirname(filepath)
 directory = os.path.join(root, "DebugResult")
 agent_jar = os.path.join(root, "functions/classtracer/target/classtracer-1.0.jar")
 
-D4J_EXEC = "/root/APR/GrowingBugRepository-6.1/framework/bin/defects4j"
+D4J_EXEC = "defects4j"
 
 def check_out(version, project, bugID, subproj, project_path=None):
     cwd = os.getcwd()
@@ -383,6 +383,7 @@ def get_classes_code(classes: List[JavaClass], src_path, buggy_path) -> List[Jav
                 clazz.methods[inst_id].src_sig = clazz.methods[inst_id].inst_sig
                 clazz.methods[inst_id].src_id = inst_id
                 clazz.methods[inst_id].code = src_methods[inst_id].code
+                clazz.methods[inst_id].loc = src_methods[inst_id].loc
                 clazz.methods[inst_id].doc = clean_doc(src_methods[inst_id].comment)
             else:
                 # - case 1: this method not exists in source code, no "Object" in inst_id, e.g.,
@@ -413,6 +414,7 @@ def get_classes_code(classes: List[JavaClass], src_path, buggy_path) -> List[Jav
                             clazz.methods[inst_id].src_sig = src_id.split("::")[-1]
                             clazz.methods[inst_id].src_id = src_id
                             clazz.methods[inst_id].code = src_methods[src_id].code
+                            clazz.methods[inst_id].loc = src_methods[inst_id].loc
                             clazz.methods[inst_id].doc = clean_doc(src_methods[src_id].comment)
                             break
                     # solve case 3

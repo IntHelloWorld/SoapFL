@@ -200,6 +200,7 @@ class ChatEnv:
         result_filename = "result.json"
         with open(os.path.join(directory, result_filename), "w", encoding="utf-8") as writer:
             json.dump(self.res_dict, writer, indent=4)
+        
         print(os.path.join(directory, result_filename), "Wrote")
 
     def generate_images_from_codes(self):

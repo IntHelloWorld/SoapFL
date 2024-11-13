@@ -481,12 +481,13 @@ class MethodReview(Phase):
 
     def update_phase_env(self, chat_env, spc_class, spc_method):
         java_class = chat_env.env_dict['classes_dict'][spc_class]
-        method_code, method_doc = method_code_prompt(java_class, spc_method)
+        method_code, method_doc, loc = method_code_prompt(java_class, spc_method)
         self.phase_env.update({"test_suite": chat_env.test_suite.name,
                                "failed_tests": chat_env.env_dict['failed_tests'],
                                "method_name": spc_method,
                                "method_code": method_code,
                                "method_doc": method_doc,
+                               "mehtod_loc": loc,
                                "test_infos": chat_env.env_dict['test_infos'],
                                "test_failure_causes": chat_env.env_dict['test_failure_causes'],
                                "class_name": spc_class,
@@ -502,6 +503,7 @@ class MethodReview(Phase):
                 "method_name": method_name,
                 "method_code": self.phase_env['method_code'],
                 "method_doc": self.phase_env['method_doc'],
+                "method_loc": self.phase_env['mehtod_loc'],
                 "class_name": self.phase_env['class_name'],
                 "class_doc": self.phase_env['class_doc'],
                 "test_failure_causes": self.phase_env['test_failure_causes'],

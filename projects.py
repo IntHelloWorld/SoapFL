@@ -38,4 +38,8 @@ SBF = {
     "Jcabi_http": ([2], [], "None"),
 }
 
-ALL_BUGS = SBF
+projectDict = {
+    "IO": ([1, 2], [], "None")
+}
+
+ALL_BUGS = projectDict

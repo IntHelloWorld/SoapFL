@@ -35,11 +35,12 @@ def method_code_prompt(java_class, method_src_id):
             prompt += "\n\n"
             doc = method.doc if method.doc != "" else method.enhanced_doc
             flag = False
+            loc = method.loc
             break
     prompt += "```"
     if flag:
         raise RuntimeError(f"method {method_src_id} not found")
-    return prompt, doc
+    return prompt, doc, loc
 
 
 def test_utility_prompt(test_cases, model_type, comment=True):

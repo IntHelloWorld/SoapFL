@@ -48,7 +48,45 @@ class FunctionsExtractor:
             except Exception as e:
                 print(e)
                 continue
+    
+    def extract_method_info(self, code):
+        def traverse_node(node):
+            if node.type == 'method_declaration':
+                method_comment = ""
+                method_code = None
+                method_name = None
+                if "comment" in node.prev_sibling.type:
+                    method_comment = bytes.decode(node.prev_sibling.text)
+                method_code = node.text.decode("utf-8")
 
+                for child in node.children:
+                    if child.type == 'identifier':
+                        method_name = bytes.decode(child.text)
+                
+                if method_name is None:
+                    raise ValueError("No method name found in the code")
+
+                return {
+                    "method_name": method_name,
+                    "method_code": method_code,
+                    "method_comment": method_comment
+                }
+
+            for child in node.children:
+                result = traverse_node(child)
+                if result:
+                    return result
+
+            return None
+
+        parser = self.language_parsers["java"]
+        tree = parser.parse(bytes(code, "utf8"))
+        root_node = tree.root_node
+        method_info = traverse_node(root_node)
+        if not method_info:
+            raise ValueError("No method found in the code")
+        return method_info
+    
     def get_functions(
         self, language: str, code: str
     ) -> List[Method]:
