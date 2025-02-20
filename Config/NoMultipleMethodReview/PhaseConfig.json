@@ -1,0 +1,110 @@
+{
+    "TestBehaviorAnalysis": {
+        "assistant_role_name": "Test Code Reviewer",
+        "user_role_name": "Test Code Reviewer",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "According to the codes of the failed tests and the related utility methods listed below: ",
+            "Test Codes: ",
+            "\"{test_codes}\"",
+            "Test Utility Methods: ",
+            "\"{test_utility_methods}\"",
+            "As the {assistant_role}, you will explain the code logic of each test in as much detail as possible.",
+            "When you explain each test, please also including the code logic of the test utility methods called by the test.",
+            "Your answer will follow the format:",
+            "'''\n1) explanation for test one;\n2) explanation for test two;\n...\n'''"
+        ]
+    },
+    "TestFailureAnalysis": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "According to the test code, error stack trace and test output of each failed test, and the behaviors of the failed tests listed below: ",
+            "{test_infos}",
+            "Test Behaviors: ",
+            "\"{test_behavior}\"",
+            "As the {assistant_role}, you will think step by step to: (1) identify the common patterns or similarities from the given test behaviors, outputs, and stack traces, and (2) recommend possible defect in the production code that may cause all of these tests to fail.",
+            "Make sure that you should only recommend possible defect in the production code, NOT in the test code."
+        ]
+    },
+    "SearchSuspiciousClass": {
+        "assistant_role_name": "Software Architect",
+        "user_role_name": "Software Architect",
+        "phase_prompt": [
+            "One or more tests in the test class \"{test_suite}\" failed due to a single bug.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "According to the test code, error stack trace and test output of each failed test , the possible causes of the test failures, and the classes that covered by all of the failed tests listed below: ",
+            "{test_infos}",
+            "Possible Causes: ",
+            "\"{test_failure_causes}\"",
+            "Covered Classes List: ",
+            "{covered_classes}",
+            "As the {assistant_role}, you will analyze all the given information to recommend which covered class is most likely to be problematic. Please make sure that you must ONLY select ONE class from the Covered Classes List.",
+            "You should NOT select the test class \"{test_suite}\", since the root cause exists in the production code.",
+            "You should emphasize the full name of the recommended classes in your response with pound sign, e.g., \"According to the given information ... so the class #com.google.ClassName# is the most suspicious\"."
+        ]
+    },
+    "MethodDocEnhancement": {
+        "assistant_role_name": "Source Code Reviewer",
+        "user_role_name": "Source Code Reviewer",
+        "phase_prompt": [
+            "Class {class_name} was covered during testing, the documentation of the class is \"{class_documentation}\".",
+            "According to the covered methods in the class:",
+            "Covered Methods List:",
+            "{methods}",
+            "As the {assistant_role}, you will analyze the method call relationship to generate a ACCURATE and CONCISE summary for each covered method.",
+            "For each covered method, if this method calls other methods in the Covered Methods List, you must explicitly claim the covered methods that called by this method in the summary, e.g., \"... this method calls method \"process\" to do something ...\".",
+            "You should response with a table in markdown format, for example:",
+            "| Method Full Name | Method Summary |\n| --- | --- |\n| com.google.ClassName$InnerClassName::MethodName(Args) | The method summary |",
+            "Now, please provide the required markdown table directly without any irrelevant descriptive text:"
+        ]
+    },
+    "FindRelatedMethods": {
+        "assistant_role_name": "Software Architect",
+        "user_role_name": "Software Architect",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug.",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "The existing analysis result shows that the class {class_name} may be problematic, the documentation of the class is \"{class_documentation}\".",
+            "According to the test code, error stack trace and test output of each failed test, the possible causes of the test failures, and methods in the class listed below: ",
+            "{test_infos}",
+            "Possible Causes: ",
+            "\"{test_failure_causes}\"",
+            "Methods List:",
+            "{methods_list}",
+            "As the {assistant_role}, you will examine the Methods List to select out all methods that may be responsible for the test failures. Note that you must ONLY select methods from the Methods List.",
+            "To answer, use the format: \"[INDEX] **METHOD_FULL_NAME**: DESCRIPTION\" where \"INDEX\" is the index of the method, \"METHOD_FULL_NAME\" is the full name of the method in Method List, \"DESCRIPTION\" denotes the detailed description. For example:",
+            "'''",
+            "[1] **com.google.JavaClass1::method1()**：this method is suspicious ...",
+            "[2] **com.google.JavaClass2$InnerClass1::method2()**：this method is suspicious ...",
+            "'''"
+        ]
+    },
+    "MethodReview": {
+        "assistant_role_name": "Software Test Engineer",
+        "user_role_name": "Software Test Engineer",
+        "phase_prompt": [
+            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug:",
+            "Failed tests: ",
+            "\"{failed_tests}\"",
+            "The existing analysis result shows that the following methods may be problematic:",
+            "According to the test code, error stack trace and test output of each failed test , the possible causes of the test failures, and the information of the suspicious methods listed below: ",
+            "{test_infos}",
+            "Possible Causes: ",
+            "\"{test_failure_causes}\"",
+            "All Suspicious Methods: ",
+            "\"{all_methods}\"",
+            "As the {assistant_role}, you will carefully all of the suspicious methods and rate the suspiciousness of each method.",
+            "You should response with a table in markdown format, for example:",
+            "| Method Full Name | Reason | Suspiciousness Score |\n| --- | --- | --- |\n| com.google.ClassName1::MethodName1(Args) | This method is very likely to be the best location that need to be fixed, because ... | 8 |\n| com.google.ClassName2$InnerClassName::MethodName2(Args) | This method is not the best location that need to be fixed ... | 0 |",
+            "Now, please provide your answer without any comments:"
+        ]
+    }
+}

@@ -87,9 +87,9 @@ def get_info(dir, log_filepath):
     if num_png_files != -1:
         cost += num_png_files * 0.016
     if num_prompt_tokens != -1:
-        cost += num_prompt_tokens * 0.003 / 1000.0
+        cost += num_prompt_tokens * 0.0025 / 1000.0
     if num_completion_tokens != -1:
-        cost += num_completion_tokens * 0.004 / 1000.0
+        cost += num_completion_tokens * 0.01 / 1000.0
 
     # info = f"🕑duration={duration}s 💰cost=${cost} 🔨version_updates={version_updates} 📃num_code_files={num_code_files} 🏞num_png_files={num_png_files} 📚num_doc_files={num_doc_files} 📃code_lines={code_lines} 📋env_lines={env_lines} 📒manual_lines={manual_lines} 🗣num_utterances={num_utterance} 🤔num_self_reflections={num_reflection} ❓num_prompt_tokens={num_prompt_tokens} ❗num_completion_tokens={num_completion_tokens} ⁉️num_total_tokens={num_total_tokens}"
 

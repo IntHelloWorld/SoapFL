@@ -16,18 +16,18 @@
         "assistant_role_name": "Software Architect",
         "user_role_name": "Software Architect",
         "phase_prompt": [
-            "One or more tests in the test suite \"{test_suite}\" failed due to a single bug.",
+            "One or more tests in the test class \"{test_suite}\" failed due to a single bug.",
             "Failed tests: ",
             "\"{failed_tests}\"",
-            "According to the test code, error stack trace and test output of each failed test , the possible causes of the test failures, and the name and documentation of the classes that covered by all of the failed tests listed below: ",
+            "According to the test code, error stack trace and test output of each failed test , the possible causes of the test failures, and the classes that covered by all of the failed tests listed below: ",
             "{test_infos}",
             "Possible Causes: ",
             "\"{test_failure_causes}\"",
             "Covered Classes List: ",
             "{covered_classes}",
-            "As the {assistant_role}, you will analyze all the given information to recommend what covered classes are most likely to be problematic. Please make sure that you must ONLY select classes from the Covered Classes List, the fewer classes you choose, the better, no more than {num_selected_classes} at most.",
-            "You should NOT select any classes in the Failed tests, since the root causes only exist in the production code.",
-            "You should emphasize the full name of the recommended classes in your response with pound sign, e.g., \"... the class #com.google.ClassName# is suspicious, ...\"."
+            "As the {assistant_role}, you will analyze all the given information to recommend which covered class is most likely to be problematic. Please make sure that you must ONLY select ONE class from the Covered Classes List.",
+            "You should NOT select the test class \"{test_suite}\", since the root cause exists in the production code.",
+            "You should emphasize the full name of the recommended classes in your response with pound sign, e.g., \"According to the given information ... so the class #com.google.ClassName# is the most suspicious\"."
         ]
     },
     "MethodDocEnhancement": {
@@ -38,10 +38,11 @@
             "According to the covered methods in the class:",
             "Covered Methods List:",
             "{methods}",
-            "As the {assistant_role}, you will analyze the method call relationship to generate a comment for each covered method.",
-            "For each covered method, if this method calls other methods in the Covered Methods List, you must explicitly claim the covered methods that called by this method in the comment, e.g., \"... this method calls method \"process\" to do something ...\".",
+            "As the {assistant_role}, you will analyze the method call relationship to generate a ACCURATE and CONCISE summary for each covered method.",
+            "For each covered method, if this method calls other methods in the Covered Methods List, you must explicitly claim the covered methods that called by this method in the summary, e.g., \"... this method calls method \"process\" to do something ...\".",
             "You should response with a table in markdown format, for example:",
-            "| Method Full Name | Method Comment |\n| --- | --- |\n| com.google.ClassName$InnerClassName::MethodName(Args) | The method comment |"
+            "| Method Full Name | Method Summary |\n| --- | --- |\n| com.google.ClassName$InnerClassName::MethodName(Args) | The method summary |",
+            "Now, please provide the required markdown table directly without any irrelevant descriptive text:"
         ]
     },
     "FindRelatedMethods": {
@@ -59,10 +60,10 @@
             "Methods List:",
             "{methods_list}",
             "As the {assistant_role}, you will examine the Methods List to select out all methods that may be responsible for the test failures. Note that you must ONLY select methods from the Methods List.",
-            "To answer, use the format: \"INDEX METHOD_FULL_NAME: DESCRIPTION\" where \"INDEX\" is the index of the method, \"METHOD_FULL_NAME\" is the full name of the method in Method List, \"DESCRIPTION\" denotes the detailed description. For example:",
+            "To answer, use the format: \"[INDEX] **METHOD_FULL_NAME**: DESCRIPTION\" where \"INDEX\" is the index of the method, \"METHOD_FULL_NAME\" is the full name of the method in Method List, \"DESCRIPTION\" denotes the detailed description. For example:",
             "'''",
-            "1) com.google.JavaClass1::method1()：this method is suspicious ...",
-            "2) com.google.JavaClass2$InnerClass1::method2()：this method is suspicious ...",
+            "[1] **com.google.JavaClass1::method1()**：this method is suspicious ...",
+            "[2] **com.google.JavaClass2$InnerClass1::method2()**：this method is suspicious ...",
             "'''"
         ]
     },
@@ -84,29 +85,11 @@
             "Suspicious Method Comment: \"{method_doc}\"",
             "Suspicious Method Code:",
             "\"{method_code}\"",
-            "As the {assistant_role}, to fix all of the test failures, you will carefully examine the code of the method \"{method_name}\" line by line to determine if this method is the best location to be fixed.",
-            "You should reply with following rules:",
-            "1. If this method is the best location to be fixed, answer with a single word <TRUE>, followed by the reason, e.g., \"<TRUE> This method is the best location that need to be fixed, because ...\";",
-            "2. Otherwise, if this method is not the best location to be fixed or you cannot determine, answer with a single word <FALSE>, e.g., \"<FALSE> This method is not the best location that need to be fixed ...\"."
-        ]
-    },
-    "GetTop1Method": {
-        "assistant_role_name": "Software Test Engineer",
-        "user_role_name": "Software Test Engineer",
-        "phase_prompt": [
-            "One or more test suites failed due to a single bug:",
-            "{failed_test_suites}",
-            "According to the possible cause of each failed test suite, and the information of the suspicious methods listed below: ",
-            "Possible Causes: ",
-            "'''",
-            "{possible_causes}",
-            "'''",
-            "Suspicious Methods:",
-            "'''",
-            "{methods_prompt}",
-            "'''",
-            "As the {assistant_role}, you will determine which SINGLE Suspicious Method is most likely the root cause of ALL failed test suites.",
-            "You should only select ONE method from the Suspicious Methods, and you should emphasize the full name of the selected method in your response with pound sign, e.g., \"... the method #com.google.JavaClass$InnerClass::method()# is suspicious, ...\""
+            "As the {assistant_role}, to fix all of the test failures, you will carefully examine the code of the method \"{method_name}\" line by line to how likely is this method the best location to be fixed.",
+            "You should respond with the format of \"#SCORE# DESCRIPTION\", where SCORE is a integer score between 1 and 10 to indicate how suspicious the method is, DESCRIPTION is the reason for your rating in natural language.",
+            "example output 1: \"#8# This method is very likely to be the best location that need to be fixed, because ...\"",
+            "example output 2: \"#0# This method is not the best location that need to be fixed ...\"",
+            "Now, please provide your answer without any comments:"
         ]
     }
 }

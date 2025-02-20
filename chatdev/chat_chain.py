@@ -31,7 +31,9 @@ class ChatChain:
                  bug_ID: int = None,
                  test_suite: TestSuite = None,
                  test_cases: List[TestCase] = None,
-                 model_type: ModelType = ModelType.GPT_3_5_TURBO) -> None:
+                 model_type: ModelType = ModelType.GPT_3_5_TURBO,
+                 project_path: str = "DebugResult",
+                 cache_dir: str = "cache") -> None:
         """
 
         Args:
@@ -47,6 +49,7 @@ class ChatChain:
 
         # load config file
         self.config_path = config_path
+        self.config_name = config_path.split("/")[-2]
         self.config_phase_path = config_phase_path
         self.config_role_path = config_role_path
         self.d4j_version = d4j_version
@@ -65,18 +68,19 @@ class ChatChain:
 
         # init chatchain config and recruitments
         self.chain = self.config["chain"]
-        self.get_top1_phase = self.config["get_top1_phase"]
         self.recruitments = self.config["recruitments"]
 
         # init default max chat turn
         self.chat_turn_limit_default = 10
 
         # init ChatEnv
-        self.chat_env_config = ChatEnvConfig(clear_structure=check_bool(self.config["clear_structure"]),
+        self.chat_env_config = ChatEnvConfig(config_name=self.config_name,
+                                             clear_structure=check_bool(self.config["clear_structure"]),
                                              brainstorming=check_bool(self.config["brainstorming"]),
                                              gui_design=check_bool(self.config["gui_design"]),
                                              git_management=check_bool(self.config["git_management"]),
                                              num_test_cases=self.config["num_test_cases"],
+                                             num_test_suites=self.config["num_test_suites"],
                                              num_classes=self.config["num_classes"],
                                              test_output_tokens=self.config["test_output_tokens"],
                                              class_doc_tokens=self.config["class_doc_tokens"],
@@ -93,8 +97,8 @@ class ChatChain:
         # init log
         filepath = os.path.dirname(__file__)
         root = os.path.dirname(filepath)
-        self.directory = os.path.join(
-            root, "DebugResult", f"d4j{self.d4j_version}-{self.project_name}-{self.bug_ID}")
+        self.directory = project_path
+        self.cache_dir = cache_dir
         self.start_time, self.log_filepath = self.get_logfilepath()
 
         # init SimplePhase instances
@@ -177,15 +181,6 @@ class ChatChain:
         """
         for phase_item in self.chain:
             self.execute_step(phase_item)
-    
-    
-    def execute_get_top1_phase(self):
-        """
-        execute the whole chain based on ChatChainConfig.json
-        Returns: None
-
-        """
-        self.execute_step(self.get_top1_phase)
 
 
     def get_logfilepath(self):
@@ -234,6 +229,7 @@ class ChatChain:
         self.chat_env.env_dict['d4j_version'] = self.d4j_version
         self.chat_env.env_dict['project_name'] = self.project_name
         self.chat_env.env_dict['bug_ID'] = self.bug_ID
+        self.chat_env.env_dict['cache_dir'] = self.cache_dir
         self.chat_env.test_suite = self.test_suite
         self.chat_env.test_cases = self.test_cases
 

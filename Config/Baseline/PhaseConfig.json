@@ -23,7 +23,7 @@
             "2. Otherwise, if this method is not the best location to be fixed or you cannot determine, answer with a single word <FALSE>, e.g., \"<FALSE> This method is not the best location that need to be fixed ...\"."
         ]
     },
-    "GetTop1Method": {
+    "RankMethod": {
         "assistant_role_name": "Software Test Engineer",
         "user_role_name": "Software Test Engineer",
         "phase_prompt": [

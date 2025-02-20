@@ -37,12 +37,6 @@
             "need_reflect": "False"
         }
     ],
-    "get_top1_phase": {
-        "phase": "GetTop1Method",
-        "phaseType": "SimplePhase",
-        "max_turn_step": 1,
-        "need_reflect": "False"
-    },
     "recruitments": [
         "Test Code Reviewer",
         "Source Code Reviewer",
@@ -50,6 +44,7 @@
         "Software Architect"
     ],
     "num_test_cases":5,
+    "num_test_suites": 5,
     "num_classes": 70,
     "test_output_tokens": 200,
     "class_doc_tokens": 100,

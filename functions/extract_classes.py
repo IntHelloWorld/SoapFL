@@ -4,7 +4,7 @@ from functools import reduce
 from typing import List
 
 
-def extract_classes(proj_name, bug_id, test_suite, repo_dir, agent_jar, max_num=30):
+def extract_classes(proj_name, bug_id, test_suite, repo_dir, agent_jar):
     """Extract classes for a test suite (witch may contains multiple test methods)"""
 
     cwd = os.path.dirname(os.path.abspath(__file__))
@@ -32,13 +32,13 @@ def extract_classes(proj_name, bug_id, test_suite, repo_dir, agent_jar, max_num=
     if len(covered_classes) > 0:
         if len(test_suite) > 1:
             print(f"    <classes intersection for test suite {proj_name}-{bug_id}-{test_suite_name}>")
-            extracted_classes = [x[:max_num] for x in covered_classes]
+            extracted_classes = covered_classes
             extracted_classes = [[c.class_name for c in x] for x in extracted_classes]
             extracted_classes = reduce(lambda x, y: set(x).intersection(set(y)), extracted_classes)
             extracted_classes = list(extracted_classes)
         else: 
             print(f"    <test suite with single failed test {proj_name}-{bug_id}-{test_suite_name}>")
-            extracted_classes = covered_classes[0][:max_num]
+            extracted_classes = covered_classes[0]
             extracted_classes = [c.class_name for c in extracted_classes]
     else:
         extracted_classes = []

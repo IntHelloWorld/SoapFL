@@ -6,56 +6,69 @@ from collections import defaultdict
 
 from tqdm import tqdm
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT)
 
-from run_all import D4J_ALL
+from run_all import D4J
 
 N_PHASES = {"Default": 6,
             "BaseOnGrace": 2,
             "Baseline": 1,
             "NoTestBehaviorAnalysis": 5,
             "NoTestFailureAnalysis": 4,
-            "NoMethodDocEnhancement": 5}
+            "NoMethodDocEnhancement": 5,
+            "NoMethodDoc": 5,
+            "NoMultipleMethodReview": 5}
 
 def get_metrics(project, bug_id, result_dict, res_file, test_failure_file):
     true_method = 0
+    true_class = 0
     method_rank = "N/A"
     recall = 0
     fp = 0
     num_buggy = None
     
     res = json.load(open(res_file, "r"))
+    
     if len(res["buggy_methods"]) == 0:
         top1_method = None
-    elif res["top1_method"] == {}:
-        top1_method = res["buggy_methods"][0]["method_name"]
+        top_score = 0
     else:
-        top1_method = res["top1_method"]["method_name"]
+        top1_method = res["buggy_methods"][0]["method_name"]
+        top_score = res["buggy_methods"][0]["score"]
 
     test_failure = pickle.load(open(test_failure_file, "rb"))
     buggy_methods = test_failure.buggy_methods
 
     # get num_buggy and true_method
     num_buggy = len(buggy_methods)
-    for buggy_method in buggy_methods:
-        if buggy_method == top1_method:
-            true_method = 1
-            method_rank = 1
-            break
+    # for buggy_method in buggy_methods:
+    #     if buggy_method == top1_method:
+    #         true_method = 1
+    #         method_rank = 1
+    #         break
+    
+    buggy_classes = [m.split("::")[0].split("$")[0] for m in buggy_methods]
     
     # get method rank
     if method_rank == "N/A":
         rank = 0
         for m in res["buggy_methods"]:
             rank += 1
+            if m['class_name'] in buggy_classes:
+                true_class = 1
             if m["method_name"] in buggy_methods:
+                # if m['score'] == top_score:
+                #     rank = 1
                 break
         else:
             rank = 0
         if rank > 0:
-            if res["buggy_methods"][0]["method_name"] in buggy_methods:
-                rank += 1
+            # if res["buggy_methods"][0]["method_name"] in buggy_methods:
+            #     rank += 1
             method_rank = rank
+            if rank == 1:
+                true_method = 1
 
     # get recall and fp
     for n in res["buggy_codes"]:
@@ -65,7 +78,8 @@ def get_metrics(project, bug_id, result_dict, res_file, test_failure_file):
             recall += 1
     recall_ratio = f"{recall}|{num_buggy}"
     
-    result_dict[project][bug_id] = {"true_method": true_method,
+    result_dict[project][bug_id] = {"true_class": true_class,
+                                    "true_method": true_method,
                                     "method_rank": method_rank,
                                     "recall_ratio": recall_ratio,
                                     "false_positive": fp}
@@ -97,15 +111,15 @@ def save_to_csv(result_dict, d4j_version):
     eval_dir = "EvaluationResult"
     if not os.path.exists(eval_dir):
         os.mkdir(eval_dir)
-    csv_file = os.path.join(eval_dir, f"{res_dir}.csv")
+    csv_file = os.path.join(eval_dir, f"{os.path.basename(res_dir)}.csv")
     f = open(csv_file, "w")
-    items = ["project", "bug_id", "true_method", "method_rank", "recall_ratio", "false_positive", "cost", "total_tokens", "time"]
+    items = ["project", "bug_id", "true_class", "true_method", "method_rank", "recall_ratio", "false_positive", "cost", "total_tokens", "time"]
     f.write(",".join(items) + "\n")
-    for project in D4J_ALL[d4j_version]:
-        for bug_id in tqdm(range(D4J_ALL[d4j_version][project]["begin"],
-                                 D4J_ALL[d4j_version][project]["end"] + 1),
+    for project in D4J[d4j_version]:
+        for bug_id in tqdm(range(D4J[d4j_version][project]["begin"],
+                                 D4J[d4j_version][project]["end"] + 1),
                            desc=f"Saving {project}"):
-            if bug_id in D4J_ALL[d4j_version][project]["deprecate"]:
+            if bug_id in D4J[d4j_version][project]["deprecate"]:
                 continue
             if str(bug_id) not in result_dict[project]:
                 print(f"Warning: Result of {project}-{bug_id} not exists!")
@@ -146,6 +160,9 @@ def main(res_dir, config):
                 info_files.append(os.path.join(bug_res_dir, file))
         
         # Get metrics
+        test_failure_file = os.path.join(ROOT, 'cache', bug_res, "test_failure.pkl")
+        if not os.path.exists(test_failure_file):
+            test_failure_file = os.path.join(bug_res_dir, "test_failure.pkl")
         result_dict = get_metrics(project, bug_id, result_dict, res_file, test_failure_file)
         
         # Get post info
@@ -155,6 +172,27 @@ def main(res_dir, config):
     save_to_csv(result_dict, d4j_version)
 
 if __name__ == "__main__":
-    res_dir = "DebugResult_BaseOnGrace"
-    config = "BaseOnGrace"
+    res_dir = "results/Default_d4j140_GPT4o"
+    # res_dir = "Default_d4j140_GPT35_TURBO"
+    # res_dir = "Default_d4j200_GPT4o"
+    config = "Default"
+    
+    # res_dir = "results/NoMultipleMethodReview_d4j140_GPT4o"
+    # config = "NoMultipleMethodReview"
+    
+    # res_dir = "results/NoMethodDocEnhancement_d4j140_GPT4o"
+    # config = "NoMethodDocEnhancement"
+    
+    # res_dir = "results/NoMethodDoc_d4j140_GPT4o"
+    # config = "NoMethodDoc"
+    
+    # res_dir = "BaseOnGrace_d4j140_GPT4o"
+    # config = "BaseOnGrace"
+    
+    # res_dir = "results/NoTestFailureAnalysis_d4j140_GPT4o"
+    # config = "NoTestFailureAnalysis"
+    
+    # res_dir = "results/NoTestBehaviorAnalysis_d4j140_GPT4o"
+    # config = "NoTestBehaviorAnalysis"
+    
     main(res_dir, config)

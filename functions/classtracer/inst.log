@@ -1,0 +1,8 @@
+com.qyh.app.Main main(java.lang.String[]) void
+com.qyh.app.Main add(int,int) int
+com.qyh.app.Main minus(int,int) int
+com.qyh.app.Main Main() void
+com.qyh.app.Main$A sayHello() void
+com.qyh.app.Main$A Main$A(int) void
+com.qyh.app.Main$B sayHello() void
+com.qyh.app.Main$B Main$B(int) void

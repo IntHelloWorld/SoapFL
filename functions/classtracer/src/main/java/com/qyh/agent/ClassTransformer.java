@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.CodeAttribute;
@@ -62,6 +63,10 @@ public class ClassTransformer implements ClassFileTransformer {
             for (CtMethod cm : cms) {
                 transformMethod(cm);
             }
+            CtConstructor[] ccs = ctClass.getConstructors();
+            for (CtConstructor cc : ccs) {
+                transformConstructor(cc);
+            }
             return ctClass.toBytecode();
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,6 +97,38 @@ public class ClassTransformer implements ClassFileTransformer {
         return methodId;
     }
 
+    private void transformConstructor(CtConstructor constructor)
+            throws CannotCompileException, NotFoundException {
+        CtClass declaringClass = constructor.getDeclaringClass();
+
+        // parameterTypeList
+        List<String> parameterTypeList = new ArrayList<>();
+        for (CtClass parameterType : constructor.getParameterTypes()) {
+            parameterTypeList.add(parameterType.getName());
+        }
+
+        // parameterNameList
+        List<String> parameterNameList = new ArrayList<>();
+        CodeAttribute codeAttribute = constructor.getMethodInfo().getCodeAttribute();
+        // if abstract or native method, codeAttribute will be null
+        if (codeAttribute == null) {
+            return;
+        }
+
+        String signature = declaringClass.getName() + "." + constructor.getName() + constructor.getSignature();
+        int idx = generateMethodId(signature.hashCode(), declaringClass.getName(), constructor.getName(),
+                parameterNameList, parameterTypeList, "void");
+        System.out.println(constructor.getName());
+        
+        try {
+            FileWriter fw = new FileWriter(instLogFile, true);
+            fw.write(methodTagArr.get(idx).toString() + "\n");
+            fw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        constructor.insertBefore("com.qyh.agent.ClassTransformer.point(" + idx + ",\"" + runLogFile + "\");");
+    }
 
     private void transformMethod(CtMethod method)
             throws CannotCompileException, NotFoundException {

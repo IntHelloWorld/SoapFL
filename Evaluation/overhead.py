@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-res_file = "../EvaluationResult/DebugResult_d4j140_GPT35.csv"
+res_file = "EvaluationResult/DebugResult_d4j140_GPT35.csv"
 res = defaultdict(dict)
 top_n = {}
 

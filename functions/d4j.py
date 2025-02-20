@@ -48,8 +48,12 @@ def check_out(version, project, bugID, project_path=None):
     os.chdir(project_path)
     if not os.path.exists("buggy"):
         run_cmd(f"defects4j checkout -p {project} -v {bugID}b -w buggy")
+    else:
+        print("buggy exists")
     if not os.path.exists("fixed"):
         run_cmd(f"defects4j checkout -p {project} -v {bugID}f -w fixed")
+    else:
+        print("fixed exists")
     os.chdir(cwd)
 
 
@@ -222,14 +226,13 @@ def refine_failed_tests(version, project, bugID):
     run_cmd(f"rm -rf {check_out_path}")
 
 
-def get_failed_tests(version, project, bugID) -> TestFailure:
+def get_failed_tests(version, project, bugID, project_path, cache_path) -> TestFailure:
     """Get the TestFailure object for a defect4j bug.
     """
 
-    project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
     buggy_path = os.path.join(project_path, "buggy")
     os.makedirs(buggy_path, exist_ok=True)
-    tmp_path = os.path.join(project_path, "tmp")
+    tmp_path = os.path.join(cache_path, "tmp")
     os.makedirs(tmp_path, exist_ok=True)
 
     # get properties
@@ -475,16 +478,15 @@ def filter_classes_Grace(project, bugID, extracted_classes: List[JavaClass]) -> 
 
 
 def extract_classes(
-    version, project, bugID, test_suite: TestSuite, max_num=50
+    version, project, bugID, project_path, cache_dir, test_suite: TestSuite
 ) -> Tuple[List[List[JavaClass]], List[List[JavaClass]], List[JavaClass]]:
     """
     Extract loaded java classes for a test suite (witch may contains multiple test methods)
     according to the method coverage information.
     """
 
-    project_path = os.path.join(directory, f"d4j{version}-{project}-{bugID}")
     buggy_path = os.path.join(project_path, "buggy")
-    tmp_path = os.path.join(project_path, "tmp")
+    tmp_path = os.path.join(cache_dir, "tmp")
 
     cmd = f"defects4j export -p dir.src.classes -w {buggy_path}"
     src_path, err = run_cmd(cmd)
@@ -520,7 +522,7 @@ def extract_classes(
             common_class_names = []
             print(f"Warning: skip classes intersection")
 
-        extracted_class_names = set(common_class_names[:max_num])
+        extracted_class_names = set(common_class_names)
         extra_class_names = get_class_name_from_msg(tmp_path, test_suite)
         for i in extra_class_names:
             for j in common_class_names:
@@ -534,7 +536,7 @@ def extract_classes(
     else:
         print(f"<classes selection for single failed test...>")
         class_names = list(covered_classes[0].keys())
-        extracted_class_names = set(class_names[:max_num])
+        extracted_class_names = set(class_names)
         extra_class_names = get_class_name_from_msg(tmp_path, test_suite)
         for i in extra_class_names:
             for j in class_names:

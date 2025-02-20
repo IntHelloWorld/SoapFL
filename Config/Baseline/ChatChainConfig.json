@@ -13,8 +13,8 @@
             "need_reflect": "False"
         }
     ],
-    "get_top1_phase": {
-        "phase": "GetTop1Method",
+    "rank_phase": {
+        "phase": "RankMethod",
         "phaseType": "SimplePhase",
         "max_turn_step": 1,
         "need_reflect": "False"

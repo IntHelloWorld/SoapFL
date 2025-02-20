@@ -21,7 +21,7 @@ import sys
 from camel.typing import ModelType
 from functions.d4j import check_out, get_failed_tests
 
-root = os.path.dirname(__file__)
+root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root)
 
 from chatdev.chat_chain import ChatChain
@@ -69,7 +69,9 @@ def main():
                         help="Name of project, your debug result will be generated in DebugResult/d4jversion_project_bugID")
     parser.add_argument('--bugID', type=int, default=1,
                         help="Prompt of software")
-    parser.add_argument('--model', type=str, default="GPT_3_5_TURBO",
+    parser.add_argument('--output', type=str, default="DebugResult",
+                        help="Output directory")
+    parser.add_argument('--model', type=str, default="GPT_4_O",
                         help="GPT Model, choose from {'GPT_3_5_TURBO','GPT_4','GPT_4_32K'}")
     args = parser.parse_args()
 
@@ -81,22 +83,23 @@ def main():
     #          Init Test Failure
     # ----------------------------------------
     
-    project_path = os.path.join(root, "DebugResult", f"d4j{args.version}-{args.project}-{args.bugID}")
+    project_path = os.path.join(root, args.output, f"d4j{args.version}-{args.project}-{args.bugID}")
+    cache_path = os.path.join(root, 'cache', f"d4j{args.version}-{args.project}-{args.bugID}")
     res_file = os.path.join(project_path, "result.json")
     if os.path.exists(res_file):
         print(f"d4j{args.version}-{args.project}-{args.bugID} already finished, skip!")
         return
     
-    check_out(args.version, args.project, args.bugID)
+    check_out(args.version, args.project, args.bugID, project_path)
     print(f"Checkout successfully!")
     
-    pkl_file = os.path.join(project_path, "test_failure.pkl")
+    pkl_file = os.path.join(cache_path, "test_failure.pkl")
     if os.path.exists(pkl_file):
         with open(pkl_file, "rb") as f:
             failed_tests = pickle.load(f)
             print(f"Load failed tests from {pkl_file}")
     else:
-        failed_tests = get_failed_tests(args.version, args.project, args.bugID)
+        failed_tests = get_failed_tests(args.version, args.project, args.bugID, project_path, cache_path)
         with open(pkl_file, "wb") as f:
             pickle.dump(failed_tests, f)
         print(f"Save failed tests to {pkl_file}")
@@ -106,14 +109,22 @@ def main():
     # ----------------------------------------
     
     config_path, config_phase_path, config_role_path = get_config(args.config)
-    args2type = {'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO, 'GPT_4': ModelType.GPT_4, 'GPT_4_32K': ModelType.GPT_4_32k}
+    args2type = {
+        'GPT_3_5_TURBO': ModelType.GPT_3_5_TURBO,
+        'GPT_4': ModelType.GPT_4,
+        'GPT_4_32K': ModelType.GPT_4_32k,
+        'GPT_4_O': ModelType.GPT_4_O,
+    }
     chat_chain = ChatChain(config_path=config_path,
-                           config_phase_path=config_phase_path,
-                           config_role_path=config_role_path,
-                           d4j_version=args.version,
-                           project_name=args.project,
-                           bug_ID=args.bugID,
-                           model_type=args2type[args.model])
+        config_phase_path=config_phase_path,
+        config_role_path=config_role_path,
+        d4j_version=args.version,
+        project_name=args.project,
+        bug_ID=args.bugID,
+        model_type=args2type[args.model],
+        project_path=project_path,
+        cache_dir=cache_path,
+    )
     
     # ----------------------------------------
     #          Init Log
@@ -126,7 +137,12 @@ def main():
     #          Run ChatChain for each test suite
     # ----------------------------------------
 
-    for test_suite in failed_tests.test_suites:
+    num_test_suites = chat_chain.chat_env.config.num_test_suites
+    test_suites = failed_tests.test_suites
+    if len(test_suites) > num_test_suites:
+        test_suites = random.sample(test_suites, num_test_suites)
+        print(f"Test suites {len(failed_tests.test_suites)} => {num_test_suites}")
+    for test_suite in test_suites:
         print("-" * 100)
 
         # ----------------------------------------
@@ -164,12 +180,6 @@ def main():
 
         chat_chain.execute_chain()
         print("-" * 100)
-    
-    # ----------------------------------------
-    #        Get Top1 Suspicious Method
-    # ----------------------------------------
-
-    chat_chain.execute_get_top1_phase()
     
     # ----------------------------------------
     #          Post Processing

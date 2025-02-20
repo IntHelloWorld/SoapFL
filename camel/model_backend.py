@@ -17,6 +17,7 @@ from typing import Any, Dict
 
 import openai
 import tiktoken
+from openai.types.chat import ChatCompletion
 
 from camel.typing import ModelType
 from chatdev.utils import log_online
@@ -60,28 +61,39 @@ class OpenAIModel(ModelBackend):
             "gpt-3.5-turbo-16k": 16384,
             "gpt-3.5-turbo-0613": 4096,
             "gpt-3.5-turbo-16k-0613": 16384,
+            "gpt-3.5-turbo-1106": 16384,
             "gpt-4": 8192,
             "gpt-4-0613": 8192,
             "gpt-4-32k": 32768,
+            "gpt-4o-2024-08-06": 128000,
         }
         num_max_token = num_max_token_map[self.model_type.value]
         num_max_completion_tokens = num_max_token - num_prompt_tokens
+        if self.model_type == ModelType.GPT_4_O:
+            num_max_completion_tokens = 16384
+        elif self.model_type == ModelType.GPT_3_5_TURBO:
+            num_max_completion_tokens = 4096
         self.model_config_dict['max_tokens'] = num_max_completion_tokens
         
-        openai.api_base = "https://api.zhiyungpt.com/v1"
-        # openai.api_key = "sk-78Uv6RwdW3reQ7fc5a7fFb1bCc8a4d7f9b9f3a9eD9457784"
-        openai.api_key = "sk-Sd8LlhnDT8Fph3FtAa63Ce0d20E3431cB63bF6F419E41c94"
-        response = openai.ChatCompletion.create(*args,
-                                                **kwargs,
-                                                model=self.model_type.value,
-                                                **self.model_config_dict)
-        time.sleep(2)
+        # set to your own OpenAI API key
+        client = openai.OpenAI(
+            base_url="",
+            api_key="",
+        )
+        
+        response = client.chat.completions.create(
+            *args,
+            **kwargs,
+            model=self.model_type.value,
+            **self.model_config_dict
+        )
+        # time.sleep(2)
 
         log_online(
             "**[OpenAI_Usage_Info Receive]**\nprompt_tokens: {}\ncompletion_tokens: {}\ntotal_tokens: {}\n".format(
-                response["usage"]["prompt_tokens"], response["usage"]["completion_tokens"],
-                response["usage"]["total_tokens"]))
-        if not isinstance(response, Dict):
+                response.usage.prompt_tokens, response.usage.completion_tokens,
+                response.usage.total_tokens))
+        if not isinstance(response, ChatCompletion):
             raise RuntimeError("Unexpected return from OpenAI API")
         return response
 
@@ -117,7 +129,7 @@ class ModelFactory:
         default_model_type = ModelType.GPT_3_5_TURBO
 
         if model_type in {
-            ModelType.GPT_3_5_TURBO, ModelType.GPT_4, ModelType.GPT_4_32k,
+            ModelType.GPT_3_5_TURBO, ModelType.GPT_4, ModelType.GPT_4_32k, ModelType.GPT_4_O,
             None
         }:
             model_class = OpenAIModel

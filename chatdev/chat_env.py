@@ -17,22 +17,27 @@ from chatdev.utils import log_online
 
 
 class ChatEnvConfig:
-    def __init__(self, clear_structure,
+    def __init__(self,
+                 config_name,
+                 clear_structure,
                  brainstorming,
                  gui_design,
                  git_management,
                  num_test_cases,
+                 num_test_suites,
                  num_classes,
                  test_output_tokens,
                  class_doc_tokens,
                  method_doc_tokens,
                  num_selected_classes,
                  basement):
+        self.config_name = config_name
         self.clear_structure = clear_structure
         self.brainstorming = brainstorming
         self.gui_design = gui_design
         self.git_management = git_management
         self.num_test_cases = num_test_cases
+        self.num_test_suites = num_test_suites
         self.num_classes = num_classes
         self.test_output_tokens = test_output_tokens
         self.class_doc_tokens = class_doc_tokens
@@ -45,6 +50,7 @@ class ChatEnvConfig:
         string += "ChatEnvConfig.clear_structure: {}\n".format(self.clear_structure)
         string += "ChatEnvConfig.brainstorming: {}\n".format(self.brainstorming)
         string += "ChatEnvConfig.num_test_cases: {}\n".format(self.num_test_cases)
+        string += "ChatEnvConfig.num_test_suites: {}\n".format(self.num_test_suites)
         string += "ChatEnvConfig.num_classes: {}\n".format(self.num_classes)
         string += "ChatEnvConfig.test_output_tokens: {}\n".format(self.test_output_tokens)
         string += "ChatEnvConfig.class_doc_tokens: {}\n".format(self.class_doc_tokens)
@@ -65,7 +71,7 @@ class ChatEnv:
         self.manuals: Documents = Documents()
         self.if_run_search = True
         self.res_dict = {
-            "top1_method": {},
+            "buggy_classes": [],
             "buggy_methods": [],  # buggy methods for all test suites
             "buggy_codes":{}  # buggy codes for all test suites, remove duplicates
         }
@@ -197,8 +203,9 @@ class ChatEnv:
             print("{} Created.".format(directory))
 
         result_filename = "result.json"
-        with open(os.path.join(directory, result_filename), "w", encoding="utf-8") as writer:
-            json.dump(self.res_dict, writer, indent=4)
+        if len(self.res_dict['buggy_methods']) > 0:
+            with open(os.path.join(directory, result_filename), "w", encoding="utf-8") as writer:
+                json.dump(self.res_dict, writer, indent=4)
         print(os.path.join(directory, result_filename), "Wrote")
 
     def generate_images_from_codes(self):

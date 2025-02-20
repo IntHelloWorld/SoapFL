@@ -14,6 +14,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from openai.types.chat import ChatCompletion
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_exponential
@@ -189,17 +190,17 @@ class ChatAgent(BaseAgent):
 
         if num_tokens < self.model_token_limit:
             response = self.model_backend.run(messages=openai_messages)
-            if not isinstance(response, dict):
+            if not isinstance(response, ChatCompletion):
                 raise RuntimeError("OpenAI returned unexpected struct")
             output_messages = [
                 ChatMessage(role_name=self.role_name, role_type=self.role_type,
-                            meta_dict=dict(), **dict(choice["message"]))
-                for choice in response["choices"]
+                            meta_dict=dict(), role=choice.message.role, content=choice.message.content)
+                for choice in response.choices
             ]
             info = self.get_info(
-                response["id"],
-                response["usage"],
-                [str(choice["finish_reason"]) for choice in response["choices"]],
+                response.id,
+                response.usage,
+                [str(choice.finish_reason) for choice in response.choices],
                 num_tokens,
             )
 

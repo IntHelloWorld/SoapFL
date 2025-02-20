@@ -3,7 +3,9 @@
 .idea
 .vscode
 *.zip
-DebugResult*
+results
 functions/OchiaiResult
 functions/tmp
 LLMAO
+cache
+__pycache__

@@ -42,6 +42,26 @@ def method_code_prompt(java_class, method_src_id):
     return prompt, doc
 
 
+def all_methods_code_prompt(chat_env, items):
+    method_prompts = []
+    template = "method full name:{name}\nmethod comment:\"{comment}\"\nmethod code:\n```java\n{code}\n```"
+    for spc_class, method_src_ids in items:
+        java_class = chat_env.env_dict['classes_dict'][spc_class]
+        for method_src_id in method_src_ids:
+            flag = True
+            for method in java_class.methods.values():
+                if method.src_id == method_src_id:
+                    code = method.code
+                    doc = method.doc if method.doc != "" else method.enhanced_doc
+                    method_prompts.append(template.format(name=method.src_id, comment=doc, code=code))
+                    flag = False
+                    break
+            if flag:
+                raise RuntimeError(f"method {method_src_id} not found")
+    prompt = "\n\n".join(method_prompts)
+    return prompt
+
+
 def test_utility_prompt(test_cases, model_type, comment=True):
     prompt = "```java\n"
 
@@ -101,29 +121,40 @@ def test_infos_prompt(test_cases, model_type, test_output_tokens=100, comment=Tr
     return prompt
 
 
-def covered_classes_prompt(version, project, bugID, test_suite, model_type, n_classes=50, class_doc_tokens=100, basement="None"):
+def covered_classes_prompt(version, project, bugID, project_path, cache_dir, test_suite, model_type, class_doc_tokens=100, basement="None"):
     """
     Return prompt includes information of covered classes, including name and doc for each.
     The prompt is in shape of a MarkDown table.
 
-    n_classes: in all of the covered classes, classes with Top n_classes highest
-            method level coverage will be included in the prompt.
     class_doc_tokens: the maximum number of tokens for the class doc.
     """
     classes_dict = {}
-    _, _, extracted_classes = extract_classes(version, project, bugID, test_suite, max_num=n_classes)
+    _, _, extracted_classes = extract_classes(version, project, bugID, project_path, cache_dir, test_suite)
     if basement == "Grace":
         extracted_classes = filter_classes_Grace(project, bugID, extracted_classes)
     elif basement == "Ochiai":
         extracted_classes = filter_classes_Ochiai(project, bugID, extracted_classes)
-    prompt = "| Index | Class Full Name | Class Documentation |\n"
-    prompt += "| --- | --- | --- |\n"
+    # prompt = "| Index | Class Full Name | Class Documentation |\n"
+    # prompt += "| --- | --- | --- |\n"
+    # for i, java_class in enumerate(extracted_classes):
+    #     class_name = java_class.class_name
+    #     class_doc = check_tokens(model_type, java_class.doc, class_doc_tokens)
+    #     classes_dict[class_name] = java_class
+    #     prompt += f"| {i+1} | {class_name} | {class_doc} |\n"
+    # prompt = "| Index | Class Full Name |\n"
+    # prompt += "| --- | --- |\n"
+    # for i, java_class in enumerate(extracted_classes):
+    #     class_name = java_class.class_name
+    #     class_doc = check_tokens(model_type, java_class.doc, class_doc_tokens)
+    #     classes_dict[class_name] = java_class
+    #     prompt += f"| {i+1} | {class_name} |\n"
+    # prompt += "\n\n\n"
+    prompt = ""
     for i, java_class in enumerate(extracted_classes):
         class_name = java_class.class_name
-        class_doc = check_tokens(model_type, java_class.doc, class_doc_tokens)
         classes_dict[class_name] = java_class
-        prompt += f"| {i+1} | {class_name} | {class_doc} |\n"
-    prompt += "\n\n\n"
+        prompt += f"{class_name}\n"
+    prompt += "\n\n"
     return prompt, classes_dict
 
 
@@ -167,18 +198,27 @@ def methods_prompt_new(java_class, methods):
     return prompt
 
 
-def methods_list_prompt(java_class, model_type, method_doc_tokens=100):
-    prompt = "| Index | Method Full Name | Method Comment |\n"
-    prompt += "| --- | --- | --- |\n"
-    for i, inst_id in enumerate(java_class.methods):
-        method_name = java_class.methods[inst_id].src_id
-        enhanced_doc = java_class.methods[inst_id].enhanced_doc
-        if enhanced_doc == "":
-            enhanced_doc = java_class.methods[inst_id].doc
-        method_doc = check_tokens(model_type, enhanced_doc, method_doc_tokens)
-        prompt += f"| {i+1} | {method_name} | {method_doc} |\n"
-    prompt += "\n\n\n"
-    return prompt
+def methods_list_prompt(java_class, model_type, method_doc_tokens=100, use_comment=True):
+    if use_comment:
+        prompt = "| Index | Method Full Name | Method Comment |\n"
+        prompt += "| --- | --- | --- |\n"
+        for i, inst_id in enumerate(java_class.methods):
+            method_name = java_class.methods[inst_id].src_id
+            enhanced_doc = java_class.methods[inst_id].enhanced_doc
+            if enhanced_doc == "":
+                enhanced_doc = java_class.methods[inst_id].doc
+            method_doc = check_tokens(model_type, enhanced_doc, method_doc_tokens)
+            prompt += f"| {i+1} | {method_name} | {method_doc} |\n"
+        prompt += "\n\n\n"
+        return prompt
+    else:
+        prompt = "| Index | Method Full Name |\n"
+        prompt += "| --- | --- |\n"
+        for i, inst_id in enumerate(java_class.methods):
+            method_name = java_class.methods[inst_id].src_id
+            prompt += f"| {i+1} | {method_name} |\n"
+        prompt += "\n\n\n"
+        return prompt
 
 
 def check_tokens(model_type, doc, max_tokens):

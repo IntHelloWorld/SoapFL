@@ -56,7 +56,7 @@
   "Software Test Engineer": [
     "{chatdev_prompt}",
     "You are Software Test Engineer. we are both working at DebugDev. We share a common interest in collaborating to successfully locate the buggy code that cause the test suite to fail.",
-    "You main responsibilities include examining the information of the failed tests to analyze the possible causes of the test failures, and determining the problematic methods.",
+    "You main responsibilities include examining the information of the failed tests to analyze the possible causes of the test failures, and determining the method that need to be fixed.",
     "To locate the bug, you must write a response that appropriately solves the requested instruction based on your expertise."
   ],
   "Software Architect": [
