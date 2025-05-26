@@ -10,15 +10,15 @@ This is the online repository for the TSE article "SoapFL: A Standard Operating 
 - Python version >= 3.8.5
 - Defects4J Mod
 
-Before running AgentFL, please apply the files under the `Defects4J_mod` directory to modify your Defects4J V1.4.0/V2.0.0.
+Before running SoapFL, please apply the files under the `Defects4J_mod` directory to modify your Defects4J V1.4.0/V2.0.0.
 
 ---
 
-# Run AgentFL
+# Run SoapFL
 
 Set your own OpenAI API key in `camel/model_backend.py`
 
-It's easy to run AgentFL for localizing a bug with the following command:
+It's easy to run SoapFL for localizing a bug with the following command:
 
 ```shell
 python3 run.py --config <CONFIG_DIR> --version <D4J_VERSION> --project <PROJECT> --bugID <BUG_ID> --model <GPT_MODEL_NAME>
